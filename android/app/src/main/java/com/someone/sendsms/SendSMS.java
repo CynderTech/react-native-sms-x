@@ -11,6 +11,7 @@ import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import java.util.ArrayList;
 
 /**
  * Created by yeyintkoko on 11/4/16.
@@ -19,6 +20,8 @@ import com.facebook.react.bridge.ReactMethod;
 public class SendSMS extends ReactContextBaseJavaModule {
     private final ReactApplicationContext reactContext;
     private Callback callback = null;
+
+    private static final int MAX_SMS_MESSAGE_LENGTH = 160;
 
     public SendSMS(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -97,8 +100,18 @@ public class SendSMS extends ReactContextBaseJavaModule {
             }, new IntentFilter(DELIVERED));
 
             SmsManager sms = SmsManager.getDefault();
-            sms.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
+            int length = message.length();
 
+            if (length > MAX_SMS_MESSAGE_LENGTH)
+            {
+                ArrayList<String> messagelist = sms.divideMessage(message);
+
+                sms.sendMultipartTextMessage(phoneNumber, null, messagelist, null, null);
+            }
+            else
+            {
+                sms.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
+            }
         }catch (Exception e) {
 
             sendCallback(messageId, "Unknown error");
